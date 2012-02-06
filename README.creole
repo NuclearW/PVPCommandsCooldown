@@ -1,0 +1,7 @@
+== PVPCommandsCooldown
+
+PVPCommandsCooldown allows a server administrator to disable specific commands for a specific amount of time based off a configuration.
+
+=== Compiling
+
+Maven 3 is required to compile PVPCommandsCooldown
