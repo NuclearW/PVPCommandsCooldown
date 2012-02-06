@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,7 +23,14 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 	public void onEnable() {
 		if(!new File(getDataFolder(), "config.yml").exists()) saveDefaultConfig();
 
-		// TODO: Load from config.yml
+		Set<String> keys = getConfig().getConfigurationSection("Commands").getKeys(false);
+		Iterator<String> i = keys.iterator();
+		while(i.hasNext()) {
+			String key = i.next();
+			getLogger().info(key + " " + getConfig().getLong("Commands."+key));
+			watchedTimes.put(key, getConfig().getLong("Commands."+key));
+		}
+		
 
 		getServer().getPluginManager().registerEvents(this, this);
 
@@ -40,6 +48,7 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 		if(!(event instanceof EntityDamageByEntityEvent)) return;
 		EntityDamageByEntityEvent dEvent = (EntityDamageByEntityEvent) event;
 		if(!(dEvent.getDamager() instanceof Player)) return;
+		if(!(dEvent.getEntity() instanceof Player)) return;
 		Player attacker = (Player) dEvent.getDamager();
 
 		Iterator<String> i = watchedTimes.keySet().iterator();
