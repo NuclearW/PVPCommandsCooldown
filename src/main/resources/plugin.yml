@@ -3,4 +3,3 @@ main: com.nuclearw.pvpcommandscooldown.PVPCommandsCooldown
 version: ${project.version}
 author: NuclearW
 description: PVPCommandsCooldown allows a server administrator to disable specific commands for a specific amount of time based off a configuration.
-database: true
