@@ -30,7 +30,6 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 			getLogger().info(key + " " + getConfig().getLong("Commands."+key));
 			watchedTimes.put(key, getConfig().getLong("Commands."+key));
 		}
-		
 
 		getServer().getPluginManager().registerEvents(this, this);
 
