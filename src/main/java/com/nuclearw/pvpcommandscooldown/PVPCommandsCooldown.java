@@ -2,11 +2,12 @@ package com.nuclearw.pvpcommandscooldown;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Tameable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -16,8 +17,10 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class PVPCommandsCooldown extends JavaPlugin implements Listener {
+	// Command - Time in seconds to put for cooling down
 	private static HashMap<String, Long> watchedTimes = new HashMap<String, Long>();
-	private static HashMap<String, HashSet<String>> disabledPlayers = new HashMap<String, HashSet<String>>();
+	// Command - <Player name - Player's last task to remove from disabled>
+	private static HashMap<String, HashMap<String, Integer>> disabledPlayers = new HashMap<String, HashMap<String, Integer>>();
 
 	@Override
 	public void onEnable() {
@@ -46,20 +49,47 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 		if(event.isCancelled()) return;
 		if(!(event instanceof EntityDamageByEntityEvent)) return;
 		EntityDamageByEntityEvent dEvent = (EntityDamageByEntityEvent) event;
+		Player attacker;
+
+		if(!(dEvent.getEntity() instanceof Player)) {
+			if(dEvent.getEntity() instanceof Projectile) {
+				Projectile projectile = (Projectile) dEvent.getEntity();
+				if(projectile.getShooter() instanceof Player) {
+					attacker = (Player) projectile.getShooter();
+				} else {
+					return;
+				}
+			} else if(dEvent.getEntity() instanceof Tameable) {
+				Tameable pet = (Tameable) dEvent.getEntity();
+				if(pet.isTamed() && pet.getOwner() instanceof Player) {
+					attacker = (Player) pet.getOwner();
+				} else {
+					return;
+				}
+			} else {
+				return;
+			}
+		} else {
+			attacker = (Player) dEvent.getDamager();
+		}
 		if(!(dEvent.getDamager() instanceof Player)) return;
-		if(!(dEvent.getEntity() instanceof Player)) return;
-		Player attacker = (Player) dEvent.getDamager();
 
 		Iterator<String> i = watchedTimes.keySet().iterator();
 		while(i.hasNext()) {
 			String command = i.next();
 
-			HashSet<String> disabled = disabledPlayers.get(command);
-			if(disabled == null) disabled = new HashSet<String>();
-			disabled.add(attacker.getName());
+			HashMap<String, Integer> disabled = disabledPlayers.get(command);
+			if(disabled == null) disabled = new HashMap<String, Integer>();
+
+			if(disabled.get(attacker.getName()) != null) {
+				getServer().getScheduler().cancelTask(disabled.get(attacker.getName()));
+			}
+
+			int id = getServer().getScheduler().scheduleAsyncDelayedTask(this, new RemoveFromDisallowTask(command, attacker.getName()), watchedTimes.get(command) * 20);
+
+			disabled.put(attacker.getName(), id);
 
 			disabledPlayers.put(command, disabled);
-			getServer().getScheduler().scheduleAsyncDelayedTask(this, new RemoveFromDisallowTask(command, attacker.getName()), watchedTimes.get(command) * 20);
 		}
 	}
 
@@ -71,10 +101,10 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 		Player player = event.getPlayer();
 
 		if(disabledPlayers.containsKey(command)) {
-			HashSet<String> players = disabledPlayers.get(command);
-			if(players == null) players = new HashSet<String>();
+			HashMap<String, Integer> players = disabledPlayers.get(command);
+			if(players == null) players = new HashMap<String, Integer>();
 
-			if(players.contains(player.getName())) {
+			if(players.containsKey(player.getName())) {
 				event.setCancelled(true);
 				player.sendMessage("You've attacked another user, you can't use this command right now.");
 			}
@@ -82,8 +112,8 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 	}
 
 	public static void removeFromDisabled(String command, String playerName) {
-		HashSet<String> disabled = disabledPlayers.get(command);
-		if(disabled == null) disabled = new HashSet<String>();
+		HashMap<String, Integer> disabled = disabledPlayers.get(command);
+		if(disabled == null) disabled = new HashMap<String, Integer>();
 		disabled.remove(playerName);
 
 		disabledPlayers.put(command, disabled);
