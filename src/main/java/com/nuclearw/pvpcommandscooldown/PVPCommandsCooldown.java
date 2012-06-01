@@ -22,6 +22,8 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 	// Command - <Player name - Player's last task to remove from disabled>
 	private static HashMap<String, HashMap<String, Integer>> disabledPlayers = new HashMap<String, HashMap<String, Integer>>();
 
+	private static int maxCommandLength = 1;
+
 	@Override
 	public void onEnable() {
 		if(!new File(getDataFolder(), "config.yml").exists()) saveDefaultConfig();
@@ -30,6 +32,10 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 		Iterator<String> i = keys.iterator();
 		while(i.hasNext()) {
 			String key = i.next();
+			String[] keyComponents = key.split(" ");
+
+			if(keyComponents.length > maxCommandLength) maxCommandLength = keyComponents.length;
+
 			getLogger().info(key + " " + getConfig().getLong("Commands."+key));
 			watchedTimes.put(key, getConfig().getLong("Commands."+key));
 		}
@@ -97,17 +103,24 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
 		String message = event.getMessage();
 		if(!message.startsWith("/")) return;
-		String command = message.substring(1).split(" ")[0];
+		String[] commandComponents = (message.substring(1)+" ").split(" ");
 		Player player = event.getPlayer();
 
-		if(disabledPlayers.containsKey(command)) {
-			HashMap<String, Integer> players = disabledPlayers.get(command);
-			if(players == null) players = new HashMap<String, Integer>();
+		String command = "";
+		for(int i = 0; i < commandComponents.length && i < maxCommandLength ; i++) {
+			command += commandComponents[i];
 
-			if(players.containsKey(player.getName())) {
-				event.setCancelled(true);
-				player.sendMessage("You've attacked another user, you can't use this command right now.");
+			if(disabledPlayers.containsKey(command)) {
+				HashMap<String, Integer> players = disabledPlayers.get(command);
+				if(players == null) players = new HashMap<String, Integer>();
+	
+				if(players.containsKey(player.getName())) {
+					event.setCancelled(true);
+					player.sendMessage("You've attacked another user, you can't use this command right now.");
+				}
 			}
+
+			command += " ";
 		}
 	}
 
