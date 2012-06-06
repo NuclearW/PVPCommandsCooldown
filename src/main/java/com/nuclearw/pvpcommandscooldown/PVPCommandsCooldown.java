@@ -51,22 +51,20 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
-	public void onEntityDamageByEntityEvent(EntityDamageEvent event) {
+	public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent event) {
 		if(event.isCancelled()) return;
-		if(!(event instanceof EntityDamageByEntityEvent)) return;
-		EntityDamageByEntityEvent dEvent = (EntityDamageByEntityEvent) event;
 		Player attacker;
 
-		if(!(dEvent.getEntity() instanceof Player)) {
-			if(dEvent.getEntity() instanceof Projectile) {
-				Projectile projectile = (Projectile) dEvent.getEntity();
+		if(!(event.getEntity() instanceof Player)) {
+			if(event.getEntity() instanceof Projectile) {
+				Projectile projectile = (Projectile) event.getEntity();
 				if(projectile.getShooter() instanceof Player) {
 					attacker = (Player) projectile.getShooter();
 				} else {
 					return;
 				}
-			} else if(dEvent.getEntity() instanceof Tameable) {
-				Tameable pet = (Tameable) dEvent.getEntity();
+			} else if(event.getEntity() instanceof Tameable) {
+				Tameable pet = (Tameable) event.getEntity();
 				if(pet.isTamed() && pet.getOwner() instanceof Player) {
 					attacker = (Player) pet.getOwner();
 				} else {
@@ -76,9 +74,9 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 				return;
 			}
 		} else {
-			attacker = (Player) dEvent.getDamager();
+			attacker = (Player) event.getDamager();
 		}
-		if(!(dEvent.getDamager() instanceof Player)) return;
+		if(!(event.getDamager() instanceof Player)) return;
 
 		Iterator<String> i = watchedTimes.keySet().iterator();
 		while(i.hasNext()) {
