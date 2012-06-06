@@ -57,7 +57,9 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 
 		if(!(event.getEntity() instanceof Player)) return;
 
-		if(!(event.getDamager() instanceof Player)) {
+		if(event.getDamager() instanceof Player) {
+			attacker = (Player) event.getDamager();
+		} else {
 			if(event.getDamager() instanceof Projectile) {
 				Projectile projectile = (Projectile) event.getDamager();
 				if(projectile.getShooter() instanceof Player) {
@@ -75,8 +77,6 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 			} else {
 				return;
 			}
-		} else {
-			attacker = (Player) event.getDamager();
 		}
 
 		Iterator<String> i = watchedTimes.keySet().iterator();
