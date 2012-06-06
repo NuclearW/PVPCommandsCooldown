@@ -57,16 +57,16 @@ public class PVPCommandsCooldown extends JavaPlugin implements Listener {
 
 		if(!(event.getEntity() instanceof Player)) return;
 
-		if(!(event.getEntity() instanceof Player)) {
-			if(event.getEntity() instanceof Projectile) {
-				Projectile projectile = (Projectile) event.getEntity();
+		if(!(event.getDamager() instanceof Player)) {
+			if(event.getDamager() instanceof Projectile) {
+				Projectile projectile = (Projectile) event.getDamager();
 				if(projectile.getShooter() instanceof Player) {
 					attacker = (Player) projectile.getShooter();
 				} else {
 					return;
 				}
-			} else if(event.getEntity() instanceof Tameable) {
-				Tameable pet = (Tameable) event.getEntity();
+			} else if(event.getDamager() instanceof Tameable) {
+				Tameable pet = (Tameable) event.getDamager();
 				if(pet.isTamed() && pet.getOwner() instanceof Player) {
 					attacker = (Player) pet.getOwner();
 				} else {
